@@ -6,7 +6,7 @@ use strict qw(subs vars refs);				# Make sure we can't mess up
 use warnings FATAL => 'all';				# Enable warnings to catch errors
 
 # Initialize our version
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 # Okay, initialize POE so we can profile it
 use POE;
@@ -379,7 +379,6 @@ sub _PROFILE_CALL {
 # Profiles POE::Session only
 sub _PROFILE_SESSINVOKE {
 	# my ($self, $source_session, $state, $etc, $file, $line) = @_;
-	my $state = $_[2];
 
 	# Set up the type
 	my $type = 'ENTERSTATE';
@@ -388,7 +387,7 @@ sub _PROFILE_SESSINVOKE {
 	my $return = 1;
 
 	# Check if this state is valid
-	if ( ! exists $_[0]->[ POE::Session::SE_STATES ]->{ $state } ) {
+	if ( ! exists $_[0]->[ POE::Session::SE_STATES ]->{ $_[2] } ) {
 		# Okay, check _default
 		if ( exists $_[0]->[ POE::Session::SE_STATES ]->{ POE::Session::EN_DEFAULT } ) {
 			# Whew, log it as _default
@@ -404,8 +403,7 @@ sub _PROFILE_SESSINVOKE {
 	# ENTERSTATE	current_session_id	statename	caller_session_id	caller_file_name	caller_file_line	time
 	# FAILSTATE	current_session_id	statename	caller_session_id	caller_file_name	caller_file_line	time
 	# DEFAULTSTATE	current_session_id	statename	caller_session_id	caller_file_name	caller_file_line	time
-	print OUT	"$type \"" . $POE::Kernel::poe_kernel->get_active_session->ID . '" "' . $state . '" "' .
-			$_[1]->ID . '" "' . $_[4] . '" "' . $_[5] . '" "' . time() . "\"\n";
+	print OUT	"$type \"" . $_[0]->ID . '" "' . $_[2] . '" "' . $_[1]->ID . '" "' . $_[4] . '" "' . $_[5] . '" "' . time() . "\"\n";
 
 	# All done!
 	return $return;
@@ -551,6 +549,12 @@ POE::Devel::Profiler - profiles POE programs
 	poepp BasicSummary
 
 =head1 CHANGES
+
+=head2 0.02
+
+	Added the BasicGraphViz Visualizer -> use it like:
+		poepp BasicGraphViz > output.dot
+		dot -Tpng -o output.png output.dot
 
 =head2 0.01
 
